@@ -1,55 +1,100 @@
-import { InputHTMLAttributes, forwardRef, ReactNode } from 'react'
+import React, { forwardRef } from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+const inputVariants = cva(
+  'w-full rounded-lg border bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors',
+  {
+    variants: {
+      variant: {
+        default: 'border-gray-300 focus:border-coral-500 focus:ring-coral-500',
+        error: 'border-red-500 focus:border-red-500 focus:ring-red-500',
+        success: 'border-green-500 focus:border-green-500 focus:ring-green-500',
+      },
+      size: {
+        sm: 'text-sm py-1.5',
+        md: 'text-base py-2',
+        lg: 'text-lg py-3',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'md',
+    },
+  }
+)
+
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
+    VariantProps<typeof inputVariants> {
   label?: string
   error?: string
-  fullWidth?: boolean
-  leftIcon?: ReactNode
-  rightIcon?: ReactNode
-  helper?: string
+  helperText?: string
+  leftIcon?: React.ReactNode
+  rightIcon?: React.ReactNode
+  onRightIconClick?: () => void
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helper, fullWidth = true, leftIcon, rightIcon, className = '', ...props }, ref) => {
-    const widthClass = fullWidth ? 'w-full' : ''
-    const hasError = !!error
-    
+  ({ 
+    className,
+    variant,
+    size,
+    label,
+    error,
+    helperText,
+    leftIcon,
+    rightIcon,
+    onRightIconClick,
+    id,
+    ...props 
+  }, ref) => {
+    const inputId = id || props.name
+
     return (
-      <div className={widthClass}>
+      <div className="w-full">
         {label && (
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label 
+            htmlFor={inputId}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             {label}
-            {props.required && <span className="text-coral-500 ml-1">*</span>}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <div className="text-gray-400">{leftIcon}</div>
+              <span className="text-gray-500 sm:text-sm">{leftIcon}</span>
             </div>
           )}
           <input
             ref={ref}
-            className={`input-field ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${
-              hasError ? 'border-error-500 focus:border-error-500 focus:ring-error-500/10' : ''
-            } ${className}`}
+            id={inputId}
+            className={inputVariants({ 
+              variant: error ? 'error' : variant, 
+              size, 
+              className: `${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${className}` 
+            })}
             {...props}
           />
           {rightIcon && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <div className="text-gray-400">{rightIcon}</div>
+              {onRightIconClick ? (
+                <button
+                  type="button"
+                  onClick={onRightIconClick}
+                  className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {rightIcon}
+                </button>
+              ) : (
+                <span className="text-gray-500 sm:text-sm">{rightIcon}</span>
+              )}
             </div>
           )}
         </div>
-        {helper && !error && (
-          <p className="mt-1 text-sm text-gray-500">{helper}</p>
-        )}
-        {error && (
-          <p className="mt-1 text-sm text-error-600 flex items-center gap-1">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {error}
+        {(error || helperText) && (
+          <p className={`mt-1 text-sm ${error ? 'text-red-600' : 'text-gray-500'}`}>
+            {error || helperText}
           </p>
         )}
       </div>

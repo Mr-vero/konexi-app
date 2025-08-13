@@ -1,81 +1,114 @@
-import { SelectHTMLAttributes, forwardRef } from 'react'
-import { ChevronDownIcon } from '@heroicons/react/24/outline'
+'use client'
 
-interface SelectOption {
+import React, { Fragment } from 'react'
+import { Listbox, Transition } from '@headlessui/react'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
+
+export interface SelectOption {
   value: string
   label: string
   disabled?: boolean
 }
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps {
+  options: SelectOption[]
+  value?: string
+  onChange: (value: string) => void
   label?: string
   error?: string
-  helper?: string
-  fullWidth?: boolean
-  options: SelectOption[]
+  helperText?: string
   placeholder?: string
+  disabled?: boolean
+  className?: string
 }
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ 
-    label, 
-    error, 
-    helper, 
-    fullWidth = true, 
-    options, 
-    placeholder = "Select an option",
-    className = '', 
-    ...props 
-  }, ref) => {
-    const widthClass = fullWidth ? 'w-full' : ''
-    const hasError = !!error
-    
-    return (
-      <div className={widthClass}>
-        {label && (
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {label}
-            {props.required && <span className="text-coral-500 ml-1">*</span>}
-          </label>
-        )}
-        <div className="relative">
-          <select
-            ref={ref}
-            className={`input-field appearance-none pr-10 ${
-              hasError ? 'border-error-500 focus:border-error-500 focus:ring-error-500/10' : ''
-            } ${className}`}
-            {...props}
-          >
-            <option value="">{placeholder}</option>
-            {options.map((option) => (
-              <option 
-                key={option.value} 
-                value={option.value} 
-                disabled={option.disabled}
-                className={option.disabled ? 'text-gray-400' : ''}
-              >
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <ChevronDownIcon className="h-5 w-5 text-gray-400" />
-          </div>
-        </div>
-        {helper && !error && (
-          <p className="mt-1 text-sm text-gray-500">{helper}</p>
-        )}
-        {error && (
-          <p className="mt-1 text-sm text-error-600 flex items-center gap-1">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </p>
-        )}
-      </div>
-    )
-  }
-)
+export function Select({
+  options,
+  value,
+  onChange,
+  label,
+  error,
+  helperText,
+  placeholder = 'Select an option',
+  disabled = false,
+  className = '',
+}: SelectProps) {
+  const selectedOption = options.find(option => option.value === value)
 
-Select.displayName = 'Select'
+  return (
+    <div className={className}>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+      )}
+      <Listbox value={value} onChange={onChange} disabled={disabled}>
+        <div className="relative">
+          <Listbox.Button 
+            className={`
+              relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left 
+              border ${error ? 'border-red-500' : 'border-gray-300'}
+              focus:outline-none focus:ring-2 focus:ring-offset-2 
+              ${error ? 'focus:ring-red-500' : 'focus:ring-coral-500'}
+              ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+              transition-colors
+            `}
+          >
+            <span className={`block truncate ${!selectedOption ? 'text-gray-400' : ''}`}>
+              {selectedOption?.label || placeholder}
+            </span>
+            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+              <ChevronUpDownIcon
+                className="h-5 w-5 text-gray-400"
+                aria-hidden="true"
+              />
+            </span>
+          </Listbox.Button>
+          <Transition
+            as={Fragment}
+            leave="transition ease-in duration-100"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              {options.map((option) => (
+                <Listbox.Option
+                  key={option.value}
+                  className={({ active }) =>
+                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                      active ? 'bg-coral-50 text-coral-900' : 'text-gray-900'
+                    } ${option.disabled ? 'opacity-50 cursor-not-allowed' : ''}`
+                  }
+                  value={option.value}
+                  disabled={option.disabled}
+                >
+                  {({ selected }) => (
+                    <>
+                      <span
+                        className={`block truncate ${
+                          selected ? 'font-medium' : 'font-normal'
+                        }`}
+                      >
+                        {option.label}
+                      </span>
+                      {selected ? (
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-coral-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                      ) : null}
+                    </>
+                  )}
+                </Listbox.Option>
+              ))}
+            </Listbox.Options>
+          </Transition>
+        </div>
+      </Listbox>
+      {(error || helperText) && (
+        <p className={`mt-1 text-sm ${error ? 'text-red-600' : 'text-gray-500'}`}>
+          {error || helperText}
+        </p>
+      )}
+    </div>
+  )
+}

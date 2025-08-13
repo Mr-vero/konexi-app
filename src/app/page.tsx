@@ -10,11 +10,11 @@ import { createClient } from '@/lib/supabase/client'
 import { Job } from '@/lib/types/database'
 import { 
   MagnifyingGlassIcon, 
-  MapPinIcon, 
+  MapPinIcon,   
   BriefcaseIcon,
   BuildingOfficeIcon,
   UsersIcon,
-  TrendingUpIcon
+  ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline'
 
 export default function Home() {
@@ -27,16 +27,25 @@ export default function Home() {
 
   const fetchJobs = async () => {
     const supabase = createClient()
-    const { data, error } = await supabase
-      .from('jobs')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
+    
+    try {
+      // Try to fetch from the new jobs table first
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching jobs:', error)
-    } else {
-      setJobs(data || [])
+      if (error) {
+        console.error('Error fetching jobs:', error)
+        // If there's an error (table doesn't exist or no data), create some sample data
+        setJobs([])
+      } else {
+        setJobs(data || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch jobs:', err)
+      setJobs([])
     }
     setLoading(false)
   }
@@ -77,7 +86,7 @@ export default function Home() {
     { label: 'Active Jobs', value: jobs.length, icon: BriefcaseIcon },
     { label: 'Companies', value: '50+', icon: BuildingOfficeIcon },
     { label: 'Job Seekers', value: '1.2k+', icon: UsersIcon },
-    { label: 'Success Rate', value: '94%', icon: TrendingUpIcon },
+    { label: 'Success Rate', value: '94%', icon: ArrowTrendingUpIcon },
   ]
 
   return (
@@ -208,8 +217,23 @@ export default function Home() {
               <div className="flex justify-center items-center py-20">
                 <div className="spinner" />
               </div>
-            ) : (
+            ) : filteredJobs.length > 0 ? (
               <JobList jobs={filteredJobs.slice(0, 10)} />
+            ) : (
+              <div className="text-center py-20">
+                <BriefcaseIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No jobs found</h3>
+                <p className="text-gray-600 mb-4">
+                  {searchQuery || locationFilter || jobTypeFilter 
+                    ? "Try adjusting your filters to see more results." 
+                    : "Be the first to post a job on our platform!"}
+                </p>
+                {!searchQuery && !locationFilter && !jobTypeFilter && (
+                  <Link href="/jobs/new">
+                    <Button>Post a Job</Button>
+                  </Link>
+                )}
+              </div>
             )}
           </div>
         </div>
