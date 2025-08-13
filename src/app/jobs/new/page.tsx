@@ -1,16 +1,48 @@
-import { Header } from '@/components/Header'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { PageHeader, Container } from '@/components/ui'
 import { JobForm } from '@/components/jobs/JobForm'
 
-export default function NewJobPage() {
+export default async function NewJobPage() {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    redirect('/login')
+  }
+
+  // Get user profile to check if they're an employer
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (profile?.user_type !== 'employer') {
+    redirect('/dashboard')
+  }
+
+  // Check if they have a company
+  const { data: company } = await supabase
+    .from('companies')
+    .select('*')
+    .eq('created_by', profile.id)
+    .single()
+
+  if (!company) {
+    redirect('/onboarding/employer')
+  }
+
   return (
-    <>
-      <Header />
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Post a New Job</h1>
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <JobForm mode="create" />
-        </div>
-      </main>
-    </>
+    <div className="min-h-screen bg-gray-50">
+      <PageHeader
+        title="Post a New Job"
+        description="Find the perfect candidate for your open position"
+      />
+      <Container className="py-8">
+        <JobForm mode="create" companyId={company.id} />
+      </Container>
+    </div>
   )
 }
