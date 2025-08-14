@@ -4,7 +4,7 @@ A comprehensive job board platform built with Next.js, Supabase, and Tailwind CS
 
 ## Live Demo
 
-[View live deployment on Vercel](#) (URL will be added after deployment)
+[View live deployment on Vercel](https://konexi-app.vercel.app/)
 
 ## Features
 
