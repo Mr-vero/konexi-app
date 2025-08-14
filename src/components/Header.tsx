@@ -28,7 +28,8 @@ export function Header() {
   const pathname = usePathname()
 
   const navigation = [
-    { name: 'Find Jobs', href: '/', public: true },
+    { name: 'Home', href: '/', public: true },
+    { name: 'Find Jobs', href: '/jobs', public: true },
     { name: 'Companies', href: '/companies', public: true },
     { name: 'Resources', href: '/resources', public: true },
   ]

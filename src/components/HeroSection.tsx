@@ -7,10 +7,9 @@ import { Button } from '@/components/ui/Button'
 
 interface HeroSectionProps {
   onSearch: (query: string, location: string) => void
-  jobCount: number
 }
 
-export function HeroSection({ onSearch, jobCount }: HeroSectionProps) {
+export function HeroSection({ onSearch }: HeroSectionProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [locationQuery, setLocationQuery] = useState('')
 
@@ -93,7 +92,7 @@ export function HeroSection({ onSearch, jobCount }: HeroSectionProps) {
             <div className="flex items-center gap-2">
               <Briefcase className="w-5 h-5 text-blue-600" />
               <span className="text-gray-700">
-                <strong className="text-gray-900">{jobCount.toLocaleString()}</strong> Active Jobs
+                <strong className="text-gray-900">12,000+</strong> Active Jobs
               </span>
             </div>
             <div className="flex items-center gap-2">
